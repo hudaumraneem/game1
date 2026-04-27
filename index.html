@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحقق الهندسي - ألوان مبهجة وبريق</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: radial-gradient(circle at center, #581c87 0%, #2e1065 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .shape-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            perspective: 1000px;
+        }
+
+        .shape-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        /* Sparkle/Brilliance Effect */
+        .sparkle {
+            position: absolute;
+            pointer-events: none;
+            background: white;
+            border-radius: 50%;
+            animation: sparkle-anim 0.8s linear forwards;
+            z-index: 100;
+        }
+
+        @keyframes sparkle-anim {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+        }
+
+        .clue-item {
+            animation: slideInRight 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .correct-glow {
+            animation: success-glow 0.8s ease-out infinite alternate;
+        }
+
+        @keyframes success-glow {
+            from { box-shadow: 0 0 10px #4ade80, 0 0 20px #4ade80; }
+            to { box-shadow: 0 0 30px #4ade80, 0 0 50px #22c55e; }
+        }
+
+        .error-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col items-center">
+
+    <!-- المؤثرات الصوتية المحدثة -->
+    <audio id="snd-correct" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="snd-error" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="snd-win" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <header class="text-center mb-8 relative">
+        <h1 class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-yellow-200 mb-4 drop-shadow-2xl">🕵️‍♂️ المحقق الهندسي</h1>
+        <p class="text-xl font-bold bg-white/10 backdrop-blur-md px-8 py-3 rounded-full inline-block border border-white/20 text-purple-100 shadow-xl">
+            استكشف الألغاز، طابق الأدلة، واكسب بريق النجاح! ✨
+        </p>
+    </header>
+
+    <!-- شريط التقدم الملون -->
+    <div class="w-full max-w-2xl mb-8">
+        <div class="flex justify-between mb-3 px-4 font-black text-lg">
+            <span class="text-yellow-300 font-black">الجولة: <span id="lvl-num">1</span> / 6</span>
+            <span class="text-green-300 font-black">النقاط: <span id="score-num">0</span></span>
+        </div>
+        <div class="w-full bg-black/30 rounded-full h-6 p-1 border border-white/10 shadow-inner">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-full w-0 transition-all duration-700 shadow-[0_0_15px_rgba(168,85,247,0.5)]"></div>
+        </div>
+    </div>
+
+    <!-- مذكرة التحقيق الملونة -->
+    <section id="clue-memo" class="w-full max-w-3xl glass-morphism rounded-[3rem] p-10 mb-12 border-l-[12px] border-yellow-400 relative">
+        <div class="flex items-center gap-5 mb-6">
+            <div class="bg-yellow-400 text-purple-900 p-4 rounded-3xl shadow-xl floating">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-black text-white drop-shadow-md">مذكرة الأدلة السحرية:</h2>
+        </div>
+        <ul id="clue-list" class="space-y-5 text-2xl text-purple-50 font-bold">
+            <!-- سيتم توليد الأدلة هنا -->
+        </ul>
+    </section>
+
+    <!-- شبكة المشتبه بهم الملونة -->
+    <main class="w-full max-w-6xl grid grid-cols-2 lg:grid-cols-3 gap-8 mb-16" id="suspects-grid">
+        <!-- سيتم توليد الأشكال هنا بألوان مبهجة -->
+    </main>
+
+    <!-- شاشة الفوز المبهرة -->
+    <div id="win-screen" class="fixed inset-0 bg-purple-900/95 backdrop-blur-3xl flex flex-col items-center justify-center text-white hidden z-50 p-10 text-center">
+        <div class="text-[15rem] mb-8 floating drop-shadow-[0_0_50px_rgba(255,255,255,0.5)]">👑</div>
+        <h2 class="text-7xl font-black mb-6 text-yellow-300">أنت أسطورة الهندسة!</h2>
+        <p class="text-3xl mb-12 opacity-90 max-w-3xl leading-relaxed font-bold">
+            لقد فككت جميع الألغاز ببريق لا يصدق. العالم الهندسي الآن يحييك أيها المحقق العظيم! 🥳
+        </p>
+        <button onclick="resetGame()" class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-20 py-6 rounded-full font-black text-4xl shadow-[0_15px_30px_rgba(234,179,8,0.4)] hover:scale-110 transition-all active:scale-95 border-b-8 border-orange-700">تحقيق جديد 🚀</button>
+    </div>
+
+    <script>
+        const shapes = [
+            {
+                id: 'hex_prism',
+                name: 'المنشور السداسي',
+                color: 'from-rose-400 to-pink-600',
+                clues: ['لدي قاعدتان متطابقتان على شكل سداسي.', 'أوجهي الجانبية تتكون من 6 مستطيلات.', 'لدي 18 حافة و12 رأساً.'],
+                svg: (color) => `<svg viewBox="0 0 100 100" class="w-24 h-24">
+                    <path d="M35 25 L50 15 L65 25 L65 45 L50 55 L35 45 Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="3"/>
+                    <path d="M35 45 L35 75 L50 85 L50 55 Z" fill="white" fill-opacity="0.3" stroke="white" stroke-width="2"/>
+                    <path d="M50 55 L50 85 L65 75 L65 45 Z" fill="white" fill-opacity="0.4" stroke="white" stroke-width="2"/>
+                </svg>`
+            },
+            {
+                id: 'tri_pyramid',
+                name: 'الهرم الثلاثي',
+                color: 'from-orange-400 to-red-500',
+                clues: ['قاعدتي على شكل مثلث.', 'لدي 4 أوجه مثلثية إجمالاً.', 'لدي 4 رؤوس فقط و6 حواف.'],
+                svg: (color) => `<svg viewBox="0 0 100 100" class="w-24 h-24">
+                    <path d="M50 20 L20 80 L50 90 Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="3"/>
+                    <path d="M50 20 L80 80 L50 90 Z" fill="white" fill-opacity="0.4" stroke="white" stroke-width="3"/>
+                    <path d="M20 80 L50 70 L80 80" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4 4"/>
+                </svg>`
+            },
+            {
+                id: 'cylinder',
+                name: 'الأسطوانة',
+                color: 'from-emerald-400 to-teal-600',
+                clues: ['لدي قاعدتان دائريتان متوازيتان.', 'وجهي الجانبي منحني بالكامل.', 'ليس لدي أي رؤوس أو حواف مستقيمة.'],
+                svg: (color) => `<svg viewBox="0 0 100 100" class="w-24 h-24">
+                    <ellipse cx="50" cy="25" rx="25" ry="10" fill="white" fill-opacity="0.4" stroke="white" stroke-width="3"/>
+                    <path d="M25 25 L25 75 A25 10 0 0 0 75 75 L75 25" fill="white" fill-opacity="0.2" stroke="white" stroke-width="3"/>
+                    <ellipse cx="50" cy="75" rx="25" ry="10" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4 4"/>
+                </svg>`
+            },
+            {
+                id: 'cone',
+                name: 'المخروط',
+                color: 'from-yellow-400 to-amber-600',
+                clues: ['لدي قاعدة دائرية واحدة فقط.', 'لدي رأس واحد مدبب في الأعلى.', 'أشبه قبعة أعياد الميلاد أو قمع الآيس كريم.'],
+                svg: (color) => `<svg viewBox="0 0 100 100" class="w-24 h-24">
+                    <ellipse cx="50" cy="80" rx="25" ry="10" fill="none" stroke="white" stroke-width="2" stroke-dasharray="4 4"/>
+                    <path d="M50 20 L25 80 A25 10 0 0 0 75 80 Z" fill="white" fill-opacity="0.3" stroke="white" stroke-width="3"/>
+                </svg>`
+            },
+            {
+                id: 'tri_prism',
+                name: 'المنشور الثلاثي',
+                color: 'from-cyan-400 to-blue-600',
+                clues: ['لدي قاعدتان على شكل مثلث.', 'أوجهي الجانبية هي 3 مستطيلات.', 'لدي 9 حواف و6 رؤوس.'],
+                svg: (color) => `<svg viewBox="0 0 100 100" class="w-24 h-24">
+                    <path d="M25 70 L55 70 L40 45 Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="3"/>
+                    <path d="M40 45 L70 25 L85 50 L55 70 Z" fill="white" fill-opacity="0.4" stroke="white" stroke-width="3"/>
+                    <path d="M40 45 L70 25" fill="none" stroke="white" stroke-width="3"/>
+                </svg>`
+            },
+            {
+                id: 'pent_pyramid',
+                name: 'الهرم الخماسي',
+                color: 'from-fuchsia-400 to-purple-600',
+                clues: ['قاعدتي مضلع له 5 أضلاع.', 'لدي 5 أوجه مثلثية تلتقي في قمة واحدة.', 'لدي 6 رؤوس و10 حواف.'],
+                svg: (color) => `<svg viewBox="0 0 100 100" class="w-24 h-24">
+                    <path d="M30 70 L45 85 L65 85 L80 70 L55 60 Z" fill="white" fill-opacity="0.1" stroke="white" stroke-width="2"/>
+                    <path d="M55 20 L30 70 L45 85 L65 85 L80 70 Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="3"/>
+                    <path d="M55 20 L45 85 M55 20 L65 85" stroke="white" stroke-width="2"/>
+                </svg>`
+            }
+        ];
+
+        let currentLevel = 0;
+        let score = 0;
+        let gameActive = true;
+        let shuffledLevels = [];
+
+        function initGame() {
+            shuffledLevels = [...shapes].sort(() => Math.random() - 0.5);
+            renderLevel();
+        }
+
+        function createSparkles(x, y) {
+            for (let i = 0; i < 25; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                const size = Math.random() * 12 + 6;
+                sparkle.style.width = `${size}px`;
+                sparkle.style.height = `${size}px`;
+                
+                const destX = (Math.random() - 0.5) * 250;
+                const destY = (Math.random() - 0.5) * 250;
+                
+                sparkle.style.left = `${x}px`;
+                sparkle.style.top = `${y}px`;
+                
+                document.body.appendChild(sparkle);
+                
+                sparkle.animate([
+                    { transform: 'translate(0, 0) scale(1) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${destX}px, ${destY}px) scale(0) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 500,
+                    easing: 'cubic-bezier(0, .9, .57, 1)'
+                }).onfinish = () => sparkle.remove();
+            }
+        }
+
+        function renderLevel() {
+            if (currentLevel >= shuffledLevels.length) {
+                endGame();
+                return;
+            }
+
+            gameActive = true;
+            const target = shuffledLevels[currentLevel];
+            
+            document.getElementById('lvl-num').innerText = currentLevel + 1;
+            document.getElementById('score-num').innerText = score;
+            document.getElementById('progress-bar').style.width = `${(currentLevel / shuffledLevels.length) * 100}%`;
+
+            const clueList = document.getElementById('clue-list');
+            clueList.innerHTML = '';
+            target.clues.forEach((clue, index) => {
+                const li = document.createElement('li');
+                li.className = 'clue-item flex items-center gap-4 drop-shadow-sm';
+                li.style.animationDelay = `${index * 0.2}s`;
+                li.innerHTML = `<span class="bg-yellow-400 w-5 h-5 rounded-full shadow-[0_0_15px_#facc15]"></span> <span>${clue}</span>`;
+                clueList.appendChild(li);
+            });
+
+            const grid = document.getElementById('suspects-grid');
+            grid.innerHTML = '';
+            
+            const options = [...shapes].sort(() => Math.random() - 0.5);
+            options.forEach(shape => {
+                const card = document.createElement('div');
+                card.className = `shape-card bg-gradient-to-br ${shape.color} p-10 rounded-[3.5rem] shadow-2xl border-4 border-white/30 flex flex-col items-center gap-6 cursor-pointer relative overflow-hidden group`;
+                card.innerHTML = `
+                    <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10 p-2 transform group-hover:rotate-12 transition-transform">
+                        ${shape.svg()}
+                    </div>
+                    <span class="relative z-10 text-3xl font-black text-white drop-shadow-md">${shape.name}</span>
+                `;
+                card.onclick = (e) => checkAnswer(shape.id, card, e);
+                grid.appendChild(card);
+            });
+        }
+
+        function playSound(id) {
+            const sound = document.getElementById(id);
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => {
+                    console.log("Audio play blocked by browser policy. Interaction needed.");
+                });
+            }
+        }
+
+        function checkAnswer(selectedId, element, event) {
+            if (!gameActive) return;
+
+            const target = shuffledLevels[currentLevel];
+            
+            if (selectedId === target.id) {
+                gameActive = false;
+                score += 50;
+                element.classList.add('correct-glow');
+                
+                // بريق النجاح
+                createSparkles(event.clientX, event.clientY);
+                
+                // تشغيل صوت الإجابة الصحيحة
+                playSound('snd-correct');
+                
+                setTimeout(() => {
+                    currentLevel++;
+                    renderLevel();
+                }, 1200);
+            } else {
+                element.classList.add('error-shake');
+                
+                // تشغيل صوت الإجابة الخاطئة
+                playSound('snd-error');
+                
+                setTimeout(() => {
+                    element.classList.remove('error-shake');
+                }, 500);
+            }
+        }
+
+        function endGame() {
+            document.getElementById('progress-bar').style.width = '100%';
+            
+            // تشغيل صوت الفوز
+            playSound('snd-win');
+            
+            document.getElementById('win-screen').classList.remove('hidden');
+        }
+
+        function resetGame() {
+            currentLevel = 0;
+            score = 0;
+            document.getElementById('win-screen').classList.add('hidden');
+            initGame();
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>
